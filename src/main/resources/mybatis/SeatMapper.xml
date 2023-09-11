@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.reserve.dao.SeatDao">
+    <select id="getAllSeatOfRoom" parameterType="java.lang.Integer" resultType="Seat">
+        SELECT * FROM seat
+        WHERE roomID = #{roomID}
+    </select>
+
+    <insert id="createSeat" parameterType="Seat">
+        <selectKey resultType="java.lang.Integer" keyProperty="id" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO seat (roomID, name, description, status)
+        VALUES (#{roomID}, #{name}, #{description}, #{status})
+    </insert>
+
+    <select id="getSeatById" parameterType="java.lang.Integer" resultType="Seat">
+        SELECT * FROM seat
+        WHERE id = #{id}
+    </select>
+
+    <update id="updateSeat" parameterType="Seat">
+        UPDATE seat SET
+                        roomID = #{roomID},
+                        name = #{name},
+                        description = #{description},
+                        status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteSeatById" parameterType="java.lang.Integer">
+        DELETE FROM seat
+        WHERE id = #{id}
+    </delete>
+</mapper>

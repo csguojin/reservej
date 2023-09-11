@@ -9,5 +9,6 @@
     </typeAliases>
     <mappers>
         <mapper resource="mybatis/RoomMapper.xml"/>
+        <mapper resource="mybatis/SeatMapper.xml"/>
     </mappers>
 </configuration>

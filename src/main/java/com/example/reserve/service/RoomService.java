@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.example.reserve.pojo.Room;
 
-
 public interface RoomService {
     List<Room> getAllRooms(Integer page, Integer pageSize);
     Room createRoom(Room newRoom);

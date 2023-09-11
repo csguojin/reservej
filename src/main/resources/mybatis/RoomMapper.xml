@@ -15,23 +15,23 @@
         VALUES (#{name}, #{capacity}, #{openTime}, #{closeTime}, #{location}, #{description}, #{status})
     </insert>
 
-    <select id="getRoomById" resultType="Room">
+    <select id="getRoomById" resultType="Room" parameterType="java.lang.Integer">
         SELECT * FROM room WHERE id = #{id}
     </select>
 
     <update id="updateRoom" parameterType="Room">
         UPDATE room SET
-            name = #{name},
-            capacity = #{capacity},
-            openTime = #{openTime},
-            closeTime = #{closeTime},
-            location = #{location},
-            description = #{description},
-            status = #{status}
+                        name = #{name},
+                        capacity = #{capacity},
+                        openTime = #{openTime},
+                        closeTime = #{closeTime},
+                        location = #{location},
+                        description = #{description},
+                        status = #{status}
         WHERE WHERE id = #{id}
     </update>
 
-    <delete id="deleteRoomById">
+    <delete id="deleteRoomById" parameterType="java.lang.Integer">
         DELETE FROM room WHERE id = #{id}
     </delete>
 </mapper>
