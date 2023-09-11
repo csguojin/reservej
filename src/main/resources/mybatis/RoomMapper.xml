@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo20240421t8.dao.UserDao">
+    <select id="getRoomById" resultType="Room">
+        select * from room where id = #{id}
+    </select>
+</mapper>
