@@ -2,8 +2,36 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.example.demo20240421t8.dao.UserDao">
-    <select id="getRoomById" resultType="Room">
-        select * from room where id = #{id}
+<mapper namespace="com.example.reserve.dao.RoomDao">
+    <select id="getAllRooms" resultType="Room">
+        SELECT * FROM room
     </select>
+
+    <insert id="createRoom" parameterType="Room">
+        <selectKey resultType="java.lang.Integer" keyProperty="id" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO room (name, capacity, openTime, closeTime, location, description, status)
+        VALUES (#{name}, #{capacity}, #{openTime}, #{closeTime}, #{location}, #{description}, #{status})
+    </insert>
+
+    <select id="getRoomById" resultType="Room">
+        SELECT * FROM room WHERE id = #{id}
+    </select>
+
+    <update id="updateRoom" parameterType="Room">
+        UPDATE room SET
+            name = #{name},
+            capacity = #{capacity},
+            openTime = #{openTime},
+            closeTime = #{closeTime},
+            location = #{location},
+            description = #{description},
+            status = #{status}
+        WHERE WHERE id = #{id}
+    </update>
+
+    <delete id="deleteRoomById">
+        DELETE FROM room WHERE id = #{id}
+    </delete>
 </mapper>
