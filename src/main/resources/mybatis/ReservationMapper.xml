@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.reserve.dao.ReservationDao">
+    <insert id="createResv" parameterType="Reservation" useGeneratedKeys="true" keyProperty="id">
+        <selectKey resultType="java.lang.Integer" keyProperty="id" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO reservation (userID, seatID, createTime, startTime, endTime, signinTime, signoutTime, status)
+        VALUES (#{userID}, #{seatID}, #{createTime}, #{startTime}, #{endTime}, #{signinTime}, #{signoutTime}, #{status})
+    </insert>
+
+    <select id="getResvByID" parameterType="java.lang.Integer" resultType="Reservation">
+        SELECT * FROM reservation
+        WHERE id = #{id}
+    </select>
+
+    <select id="getResvsByUser" parameterType="java.lang.Integer" resultType="Reservation">
+        SELECT * FROM reservation
+        WHERE userID = #{userID}
+        ORDER BY startTime DESC
+    </select>
+
+    <select id="getResvsByUserDate" parameterType="map" resultType="Reservation">
+        SELECT * FROM reservation
+        WHERE userID = #{userID} AND DATE(start_time) = DATE(#{date})
+        ORDER BY startTime
+    </select>
+
+    <select id="getResvsBySeat" parameterType="java.lang.Integer" resultType="Reservation">
+        SELECT * FROM reservation
+        WHERE seatID = #{seatID}
+        ORDER BY startTime DESC
+    </select>
+
+    <select id="getResvsBySeatDate" parameterType="map" resultType="Reservation">
+        SELECT * FROM reservation
+        WHERE seatID = #{seatID} AND DATE(startTime) = DATE(#{date})
+        ORDER BY startTime
+    </select>
+
+    <update id="updateResv" parameterType="Reservation">
+        UPDATE reservation SET
+                               createTime = #{createTime},
+                               startTime = #{startTime},
+                               endTime = #{endTime},
+                               signinTime = #{signinTime},
+                               signoutTime = #{signoutTime},
+                               status = #{status}
+        WHERE id = #{id}
+    </update>
+</mapper>
