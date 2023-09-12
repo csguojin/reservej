@@ -19,7 +19,8 @@ public class SeatController {
     public List<Seat> getAllSeatOfRoom(
             @PathVariable Integer roomID,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
-            @RequestParam(value = "page_size", defaultValue = "10") Integer pageSize) {
+            @RequestParam(value = "page_size", defaultValue = "10") Integer pageSize
+    ) {
         if (page <= 0) {
             page = 1;
         }
@@ -45,7 +46,8 @@ public class SeatController {
     @PutMapping("/{id}")
     public Seat updateSeat(
             @PathVariable Integer roomID,
-            @PathVariable Integer id, @RequestBody Seat newSeat) {
+            @PathVariable Integer id, @RequestBody Seat newSeat
+    ) {
         newSeat.setRoomID(roomID);
         newSeat.setId(id);
         return seatService.updateSeat(newSeat);

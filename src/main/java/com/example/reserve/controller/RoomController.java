@@ -17,7 +17,8 @@ public class RoomController {
     @GetMapping("")
     public List<Room> getAllRoom(
             @RequestParam(value = "page", defaultValue = "1") Integer page,
-            @RequestParam(value = "page_size", defaultValue = "10") Integer pageSize) {
+            @RequestParam(value = "page_size", defaultValue = "10") Integer pageSize
+    ) {
         if (page <= 0) {
             page = 1;
         }
@@ -38,7 +39,10 @@ public class RoomController {
     }
 
     @PutMapping("/{id}")
-    public Room updateRoom(@PathVariable Integer id, @RequestBody Room newRoom) {
+    public Room updateRoom(
+            @PathVariable Integer id,
+            @RequestBody Room newRoom
+    ) {
         newRoom.setId(id);
         return roomService.updateRoom(newRoom);
     }

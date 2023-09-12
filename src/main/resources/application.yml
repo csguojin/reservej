@@ -9,3 +9,7 @@ spring:
 
 mybatis:
   config-location: classpath:mybatis-config.xml
+
+jwt:
+  secret: secret
+  expiration: 86400000

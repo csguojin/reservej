@@ -8,6 +8,7 @@
         <package name="com.example.reserve.pojo"/>
     </typeAliases>
     <mappers>
+        <mapper resource="mybatis/UserMapper.xml"/>
         <mapper resource="mybatis/RoomMapper.xml"/>
         <mapper resource="mybatis/SeatMapper.xml"/>
         <mapper resource="mybatis/ReservationMapper.xml"/>
