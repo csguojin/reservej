@@ -1,11 +1,11 @@
 package com.example.reserve.dao;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.session.RowBounds;
 
 import com.example.reserve.pojo.Seat;
-
-import java.util.List;
 
 @Mapper
 public interface SeatDao {

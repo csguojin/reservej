@@ -7,7 +7,7 @@ import com.example.reserve.exception.ReservationException;
 import com.example.reserve.pojo.Reservation;
 
 public interface ReservationService {
-    Reservation createResv(Reservation newResv);
+    Reservation createResv(Reservation newResv) throws ReservationException;
     Reservation getResvByID(Integer id);
     List<Reservation> getResvsByUser(Integer userID);
     List<Reservation> getResvsByUserDate(Integer userID, Date date);

@@ -3,13 +3,13 @@ package com.example.reserve.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
+import com.example.reserve.exception.ReservationException;
 import com.example.reserve.pojo.Reservation;
 import com.example.reserve.service.ReservationService;
-import com.example.reserve.exception.ReservationException;
 
 @RestController
 @RequestMapping("/api/v1/users/{userID}/resvs")
@@ -23,12 +23,17 @@ public class ReservationController {
     }
 
     @PostMapping("")
-    public Reservation createResv(
+    public ResponseEntity<?> createResv(
             @PathVariable Integer userID,
             @RequestBody Reservation newResv
     ) {
-        newResv.setUserID(userID);
-        return resvService.createResv(newResv);
+        try {
+            newResv.setUserID(userID);
+            Reservation result = resvService.createResv(newResv);
+            return ResponseEntity.ok(result);
+        } catch (ReservationException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @GetMapping("/{ResvID}")

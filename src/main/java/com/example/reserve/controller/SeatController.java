@@ -2,12 +2,11 @@ package com.example.reserve.controller;
 
 import java.util.List;
 
-import com.example.reserve.pojo.Room;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.reserve.service.SeatService;
 import com.example.reserve.pojo.Seat;
+import com.example.reserve.service.SeatService;
 
 @RestController
 @RequestMapping("/api/v1/rooms/{roomID}/seats")

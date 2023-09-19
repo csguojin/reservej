@@ -16,4 +16,12 @@ public class Room {
     private String location;
     private String description;
     private Integer status;
+
+    public String getRedisKey() {
+        return "room:"+this.getId().toString();
+    }
+
+    public static String getRedisKey(Integer roomID) {
+        return "room:"+roomID.toString();
+    }
 }

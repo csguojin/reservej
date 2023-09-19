@@ -2,8 +2,6 @@ package com.example.reserve.service;
 
 import java.util.List;
 
-import org.apache.ibatis.session.RowBounds;
-
 import com.example.reserve.pojo.Seat;
 
 public interface SeatService {

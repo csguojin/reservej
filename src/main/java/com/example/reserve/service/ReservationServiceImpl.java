@@ -1,26 +1,58 @@
 package com.example.reserve.service;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Calendar;
 
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.example.reserve.cache.Redis;
 import com.example.reserve.dao.ReservationDao;
-import com.example.reserve.pojo.Reservation;
 import com.example.reserve.exception.ReservationException;
+import com.example.reserve.pojo.Reservation;
+import com.example.reserve.utils.RandomStringGenerator;
 
 @Service
 public class ReservationServiceImpl implements ReservationService {
     @Autowired
     private ReservationDao resvDao;
 
-    public Reservation createResv(Reservation newResv) {
-        // todo
+    @Autowired
+    private Redis redis;
+
+    public Reservation createResv(Reservation newResv) throws ReservationException {
+        newResv.check();
+
+        // user
+        String lockUserKey = newResv.getRedisKeyLockUser();
+        String lockUserValue = RandomStringGenerator.geneRandStr(16);
+        boolean ok = redis.lock(lockUserKey, lockUserValue, 60);
+        if (!ok) {
+            throw new ReservationException("user cannot make multiple appointments at the same time");
+        }
+
+        // check user todo
+
+        // seat
+        String lockSeatKey = newResv.getRedisKeyLockSeat();
+        String lockSeatValue = RandomStringGenerator.geneRandStr(16);
+        ok = redis.lock(lockSeatKey, lockSeatValue, 60);
+        if (!ok) {
+            throw new ReservationException("seat cannot handle multiple appointments at the same time");
+        }
+
+        // check seat todo
+
         resvDao.createResv(newResv);
-        return resvDao.getResvByID(newResv.getId());
+
+        Reservation resv = resvDao.getResvByID(newResv.getId());
+
+        // update cache todo
+        redis.unlock(lockSeatKey, lockSeatValue);
+        redis.unlock(lockUserKey, lockUserValue);
+        return resv;
     }
 
     public Reservation getResvByID(Integer id) {
@@ -119,6 +151,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         return resvDao.getResvByID(resvID);
     }
+
     public Reservation cancelResv(Integer resvID, Integer userID) throws ReservationException {
         Reservation resv = resvDao.getResvByID(resvID);
         if (resv == null) {

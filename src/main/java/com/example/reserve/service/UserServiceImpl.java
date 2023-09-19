@@ -3,13 +3,13 @@ package com.example.reserve.service;
 import java.util.List;
 import java.util.Objects;
 
-import com.example.reserve.utils.JwtTokenProvider;
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.reserve.dao.UserDao;
 import com.example.reserve.pojo.User;
+import com.example.reserve.utils.JwtTokenProvider;
 
 @Service
 public class UserServiceImpl implements UserService {
