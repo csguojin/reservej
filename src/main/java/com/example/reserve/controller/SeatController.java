@@ -3,6 +3,7 @@ package com.example.reserve.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.reserve.pojo.Seat;
@@ -15,45 +16,38 @@ public class SeatController {
     private SeatService seatService;
 
     @GetMapping("")
-    public List<Seat> getAllSeatOfRoom(
+    public ResponseEntity<?> getAllSeatOfRoom(
             @PathVariable Integer roomID,
             @RequestParam(value = "page", defaultValue = "1") Integer page,
-            @RequestParam(value = "page_size", defaultValue = "10") Integer pageSize
-    ) {
-        if (page <= 0) {
-            page = 1;
-        }
-        if (pageSize > 100) {
-            pageSize = 100;
-        }
-        return seatService.getAllSeatOfRoom(roomID, page, pageSize);
+            @RequestParam(value = "page_size", defaultValue = "10") Integer pageSize) {
+        List<Seat> seats = seatService.getAllSeatOfRoom(roomID, page, pageSize);
+        return ResponseEntity.ok(seats);
     }
 
     @PostMapping("")
-    public Seat createSeat(
-            @PathVariable Integer roomID,
-            @RequestBody Seat newSeat) {
+    public ResponseEntity<?> createSeat(@PathVariable Integer roomID, @RequestBody Seat newSeat) {
         newSeat.setRoomID(roomID);
-        return seatService.createSeat(newSeat);
+        Seat seat = seatService.createSeat(newSeat);
+        return ResponseEntity.ok(seat);
     }
 
     @GetMapping("/{id}")
-    public Seat getSeatById(@PathVariable Integer id) {
-        return seatService.getSeatById(id);
+    public ResponseEntity<?> getSeatById(@PathVariable Integer id) {
+        Seat seat = seatService.getSeatById(id);
+        return ResponseEntity.ok(seat);
     }
 
     @PutMapping("/{id}")
-    public Seat updateSeat(
-            @PathVariable Integer roomID,
-            @PathVariable Integer id, @RequestBody Seat newSeat
-    ) {
+    public ResponseEntity<?> updateSeat(@PathVariable Integer roomID, @PathVariable Integer id, @RequestBody Seat newSeat) {
         newSeat.setRoomID(roomID);
         newSeat.setId(id);
-        return seatService.updateSeat(newSeat);
+        Seat seat = seatService.updateSeat(newSeat);
+        return ResponseEntity.ok(seat);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteSeatById(@PathVariable Integer id) {
+    public ResponseEntity<?> deleteSeatById(@PathVariable Integer id) {
         seatService.deleteSeatById(id);
+        return ResponseEntity.ok("OK");
     }
 }

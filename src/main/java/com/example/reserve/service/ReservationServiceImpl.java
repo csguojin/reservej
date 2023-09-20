@@ -19,7 +19,6 @@ import com.example.reserve.utils.RandomStringGenerator;
 public class ReservationServiceImpl implements ReservationService {
     @Autowired
     private ReservationDao resvDao;
-
     @Autowired
     private Redis redis;
 
@@ -197,7 +196,6 @@ public class ReservationServiceImpl implements ReservationService {
 
         return resvDao.getResvByID(resvID);
     }
-
 
     public List<Reservation> getResvsByUser(Integer userID) {
         return resvDao.getResvsByUser(userID, new RowBounds(0, 10));

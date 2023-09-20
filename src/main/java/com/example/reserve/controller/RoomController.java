@@ -3,6 +3,7 @@ package com.example.reserve.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.reserve.pojo.Room;
@@ -15,40 +16,35 @@ public class RoomController {
     private RoomService roomService;
 
     @GetMapping("")
-    public List<Room> getAllRoom(
+    public ResponseEntity<?> getAllRoom(
             @RequestParam(value = "page", defaultValue = "1") Integer page,
-            @RequestParam(value = "page_size", defaultValue = "10") Integer pageSize
-    ) {
-        if (page <= 0) {
-            page = 1;
-        }
-        if (pageSize > 100) {
-            pageSize = 100;
-        }
-        return roomService.getAllRooms(page, pageSize);
+            @RequestParam(value = "page_size", defaultValue = "10") Integer pageSize) {
+        List<Room> rooms = roomService.getAllRooms(page, pageSize);
+        return ResponseEntity.ok(rooms);
     }
 
     @PostMapping("")
-    public Room createRoom(@RequestBody Room newRoom) {
-        return roomService.createRoom(newRoom);
+    public ResponseEntity<?> createRoom(@RequestBody Room newRoom) {
+        Room room = roomService.createRoom(newRoom);
+        return ResponseEntity.ok(room);
     }
 
     @GetMapping("/{id}")
-    public Room getRoomById(@PathVariable Integer id) {
-        return roomService.getRoomById(id);
+    public ResponseEntity<?> getRoomById(@PathVariable Integer id) {
+        Room room =  roomService.getRoomById(id);
+        return ResponseEntity.ok(room);
     }
 
     @PutMapping("/{id}")
-    public Room updateRoom(
-            @PathVariable Integer id,
-            @RequestBody Room newRoom
-    ) {
+    public ResponseEntity<?> updateRoom(@PathVariable Integer id, @RequestBody Room newRoom) {
         newRoom.setId(id);
-        return roomService.updateRoom(newRoom);
+        Room room = roomService.updateRoom(newRoom);
+        return ResponseEntity.ok(room);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteRoomById(@PathVariable Integer id) {
+    public ResponseEntity<?> deleteRoomById(@PathVariable Integer id) {
         roomService.deleteRoomById(id);
+        return ResponseEntity.ok("OK");
     }
 }

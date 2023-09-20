@@ -1,6 +1,7 @@
 package com.example.reserve.controller;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,15 +19,15 @@ public class ReservationController {
     private ReservationService resvService;
 
     @GetMapping("")
-    public List<Reservation> getAllResvsByUser(@PathVariable Integer userID) {
-        return resvService.getResvsByUser(userID);
+    public ResponseEntity<?> getAllResvsByUser(@PathVariable Integer userID,
+            @RequestParam(value = "page", defaultValue = "1") Integer page,
+            @RequestParam(value = "page_size", defaultValue = "10") Integer pageSize) {
+        List<Reservation> resvs = resvService.getResvsByUser(userID);
+        return ResponseEntity.ok(resvs);
     }
 
     @PostMapping("")
-    public ResponseEntity<?> createResv(
-            @PathVariable Integer userID,
-            @RequestBody Reservation newResv
-    ) {
+    public ResponseEntity<?> createResv(@PathVariable Integer userID, @RequestBody Reservation newResv) {
         try {
             newResv.setUserID(userID);
             Reservation result = resvService.createResv(newResv);
@@ -37,19 +38,16 @@ public class ReservationController {
     }
 
     @GetMapping("/{ResvID}")
-    public Reservation getResv(
-            @PathVariable Integer userID,
-            @PathVariable Integer resvID
-    ) {
-        // todo check user
-        return resvService.getResvByID(resvID);
+    public ResponseEntity<?> getResv(@PathVariable Integer userID, @PathVariable Integer resvID) {
+        Reservation resv = resvService.getResvByID(resvID);
+        if (!Objects.equals(userID, resv.getUserID())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("invalid reservation");
+        }
+        return ResponseEntity.ok(resv);
     }
 
     @PostMapping("/{resvID}/signin")
-    public ResponseEntity<?> signinResv(
-            @PathVariable Integer userID,
-            @PathVariable Integer resvID
-    ) {
+    public ResponseEntity<?> signinResv(@PathVariable Integer userID, @PathVariable Integer resvID) {
         try {
             Reservation result = resvService.signinResv(resvID, userID);
             return ResponseEntity.ok(result);
@@ -59,10 +57,7 @@ public class ReservationController {
     }
 
     @PostMapping("/{resvID}/signout")
-    public ResponseEntity<?> signoutResv(
-            @PathVariable Integer userID,
-            @PathVariable Integer resvID
-    ) {
+    public ResponseEntity<?> signoutResv(@PathVariable Integer userID, @PathVariable Integer resvID) {
         try {
             Reservation result = resvService.signoutResv(resvID, userID);
             return ResponseEntity.ok(result);
@@ -72,10 +67,7 @@ public class ReservationController {
     }
 
     @PostMapping("/{resvID}/cancel")
-    public ResponseEntity<?> cancelResv(
-            @PathVariable Integer userID,
-            @PathVariable Integer resvID
-    ) {
+    public ResponseEntity<?> cancelResv(@PathVariable Integer userID, @PathVariable Integer resvID) {
         try {
             Reservation result = resvService.cancelResv(resvID, userID);
             return ResponseEntity.ok(result);
