@@ -17,11 +17,11 @@ public class Room {
     private String description;
     private Integer status;
 
-    public String getRedisKey() {
+    public String buildRedisKey() {
         return "room:"+this.getId().toString();
     }
 
-    public static String getRedisKey(Integer roomID) {
+    public static String buildRedisKey(Integer roomID) {
         return "room:"+roomID.toString();
     }
 }

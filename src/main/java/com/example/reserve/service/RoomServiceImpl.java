@@ -14,25 +14,20 @@ import com.example.reserve.pojo.Room;
 public class RoomServiceImpl implements RoomService {
     @Autowired
     private RoomDao roomDao;
-
     @Autowired
     private Redis redis;
 
-    public List<Room> getAllRooms(Integer page, Integer pageSize) {
-        return roomDao.getAllRooms(new RowBounds((page - 1) * pageSize, pageSize));
-    }
-
     public Room createRoom(Room newRoom) {
         roomDao.createRoom(newRoom);
-        String redisKey = newRoom.getRedisKey();
+        String redisKey = newRoom.buildRedisKey();
         Room room = roomDao.getRoomById(newRoom.getId());
         redis.set(redisKey, room);
         return room;
     }
 
     public Room getRoomById(Integer id) {
-        String redisKey = Room.getRedisKey(id);
-        Room room = (Room) redis.getObj(redisKey);
+        String redisKey = Room.buildRedisKey(id);
+        Room room = redis.get(redisKey, Room.class);
         if (room != null) {
             return room;
         }
@@ -42,8 +37,8 @@ public class RoomServiceImpl implements RoomService {
     }
 
     public Room updateRoom(Room newRoom) {
-        String redisKey = newRoom.getRedisKey();
-        redis.deleteKey(redisKey);
+        String redisKey = newRoom.buildRedisKey();
+        redis.del(redisKey);
         roomDao.updateRoom(newRoom);
         Room room = roomDao.getRoomById(newRoom.getId());
         redis.set(redisKey, room);
@@ -51,8 +46,12 @@ public class RoomServiceImpl implements RoomService {
     }
 
     public void deleteRoomById(Integer id) {
-        String redisKey = Room.getRedisKey(id);
-        redis.deleteKey(redisKey);
+        String redisKey = Room.buildRedisKey(id);
+        redis.del(redisKey);
         roomDao.deleteRoomById(id);
+    }
+
+    public List<Room> getAllRooms(Integer page, Integer pageSize) {
+        return roomDao.getAllRooms(new RowBounds((page - 1) * pageSize, pageSize));
     }
 }

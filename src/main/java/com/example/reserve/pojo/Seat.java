@@ -13,4 +13,12 @@ public class Seat {
     private String name;
     private String description;
     private Integer status;
+
+    public String buildRedisKey() {
+        return "seat:"+this.getId().toString();
+    }
+
+    public static String buildRedisKey(Integer seatID) {
+        return "seat:"+seatID.toString();
+    }
 }

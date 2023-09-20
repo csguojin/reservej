@@ -1,5 +1,6 @@
 package com.example.reserve.pojo;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -23,24 +24,51 @@ public class Reservation {
     private Date signoutTime;
     private Integer status;
 
-    public String getRedisKeyLockUser() throws ReservationException {
+    public String buildRedisKeyLockUser() throws ReservationException {
         if (this.getUserID() <= 0) {
             throw new ReservationException("invalid user");
         }
-        return "lock:resv:user:" + this.getUserID().toString();
+        return "lock:resv:user:" + this.getUserID();
     }
-    public String getRedisKeyLockSeat() throws ReservationException {
+
+    public String buildRedisKeyUserDate() throws ReservationException {
+        if (this.getUserID() <= 0) {
+            throw new ReservationException("invalid user");
+        }
+        if (this.getStartTime() == null) {
+            throw new ReservationException("invalid start time");
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        return "resvbit:user:" + this.getUserID().toString() + ":" + sdf.format(this.getStartTime());
+    }
+
+    public String buildRedisKeySeatDate() throws ReservationException {
         if (this.getSeatID() <= 0) {
             throw new ReservationException("invalid seat");
         }
-        return "lock:resv:user:" + this.getSeatID().toString();
+        if (this.getStartTime() == null) {
+            throw new ReservationException("invalid start time");
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        return "resvbit:seat:"+ this.getSeatID().toString() + ":" + sdf.format(this.getStartTime());
     }
 
-    public String getRedisKey() {
+    public String buildRedisKeyLockSeat() throws ReservationException {
+        if (this.getSeatID() <= 0) {
+            throw new ReservationException("invalid seat");
+        }
+        return "lock:resv:seat:" + this.getSeatID();
+    }
+
+    public String buildRedisKey() {
         return "resv:"+this.getId().toString();
     }
 
-    public Integer[] getRedisTimeBits() {
+    public static String buildRedisKey(Integer resvID) {
+        return "resv:"+resvID.toString();
+    }
+
+    public Integer[] buildRedisTimeBits() {
         if (!this.getEndTime().after(this.getStartTime())) {
             return new Integer[]{-1, -1};
         }

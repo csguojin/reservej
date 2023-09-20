@@ -25,54 +25,99 @@ public class ReservationServiceImpl implements ReservationService {
     public Reservation createResv(Reservation newResv) throws ReservationException {
         newResv.check();
 
-        // user
-        String lockUserKey = newResv.getRedisKeyLockUser();
+        String lockUserKey = newResv.buildRedisKeyLockUser();
         String lockUserValue = RandomStringGenerator.geneRandStr(16);
         boolean ok = redis.lock(lockUserKey, lockUserValue, 60);
         if (!ok) {
             throw new ReservationException("user cannot make multiple appointments at the same time");
         }
 
-        // check user todo
+        String userDateKey = newResv.buildRedisKeyUserDate();
+        if (!redis.exists(userDateKey)) {
+            List<Reservation> resvs = resvDao.getResvsByUserDate(newResv.getUserID(), newResv.getStartTime());
+            Integer[][] bitfiledArgs = new Integer[resvs.size()][];
+            for (int i = 0; i < resvs.size(); i++) {
+                Integer[] timeBits = resvs.get(i).buildRedisTimeBits();
+                bitfiledArgs[i] = timeBits;
+            }
+            redis.bitfieldSetU1(userDateKey, bitfiledArgs);
+            redis.expire(userDateKey, 60 * 60);
+        }
+        Integer[] curBits = newResv.buildRedisTimeBits();
+        if (redis.bitfieldGetU1(userDateKey, curBits) > 0) {
+            redis.unlock(lockUserKey, lockUserValue);
+            throw new ReservationException("user already has reservation in the time period");
+        }
 
-        // seat
-        String lockSeatKey = newResv.getRedisKeyLockSeat();
+        String lockSeatKey = newResv.buildRedisKeyLockSeat();
         String lockSeatValue = RandomStringGenerator.geneRandStr(16);
         ok = redis.lock(lockSeatKey, lockSeatValue, 60);
         if (!ok) {
+            redis.unlock(lockUserKey, lockUserValue);
             throw new ReservationException("seat cannot handle multiple appointments at the same time");
         }
 
-        // check seat todo
+        String seatDateKey = newResv.buildRedisKeySeatDate();
+        if (!redis.exists(seatDateKey)) {
+            List<Reservation> resvs = resvDao.getResvsBySeatDate(newResv.getSeatID(), newResv.getStartTime());
+            Integer[][] bitfiledArgs = new Integer[resvs.size()][];
+            for (int i = 0; i < resvs.size(); i++) {
+                Integer[] timeBits = resvs.get(i).buildRedisTimeBits();
+                bitfiledArgs[i] = timeBits;
+            }
+            redis.bitfieldSetU1(seatDateKey, bitfiledArgs);
+            redis.expire(seatDateKey, 24 * 60 * 60);
+        }
+        if (redis.bitfieldGetU1(seatDateKey, curBits) > 0) {
+            redis.unlock(lockSeatKey, lockSeatValue);
+            redis.unlock(lockUserKey, lockUserValue);
+            throw new ReservationException("seat already has reservation in the time period");
+        }
+        redis.executeLuaScript("/lua/create_reservation.lua", userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
 
         resvDao.createResv(newResv);
 
         Reservation resv = resvDao.getResvByID(newResv.getId());
+        if (resv == null) {
+            redis.executeLuaScript("/lua/cancel_reservation.lua", userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
+        }
 
-        // update cache todo
         redis.unlock(lockSeatKey, lockSeatValue);
         redis.unlock(lockUserKey, lockUserValue);
         return resv;
     }
 
     public Reservation getResvByID(Integer id) {
-        return resvDao.getResvByID(id);
+        String redisKey = Reservation.buildRedisKey(id);
+        Reservation resv = redis.get(redisKey, Reservation.class);
+        if (resv != null) {
+            return resv;
+        }
+        resv = resvDao.getResvByID(id);
+        redis.set(redisKey, resv);
+        return resv;
     }
 
-    public List<Reservation> getResvsByUser(Integer userID) {
-        return resvDao.getResvsByUser(userID, new RowBounds(0, 10));
-    }
+    public Reservation cancelResv(Integer resvID, Integer userID) throws ReservationException {
+        Reservation resv = resvDao.getResvByID(resvID);
+        if (resv == null) {
+            throw new ReservationException("not found reservation");
+        }
 
-    public List<Reservation> getResvsByUserDate(Integer userID, Date date) {
-        return resvDao.getResvsByUserDate(userID, date);
-    }
+        if (resv.getStatus() != 0) {
+            throw new ReservationException("reservation has been cancel");
+        }
 
-    public List<Reservation> getResvsBySeat(Integer seatID) {
-        return resvDao.getResvsBySeat(seatID, new RowBounds(0, 10));
-    }
+        resv.setStatus(1);
 
-    public List<Reservation> getResvsBySeatDate(Integer seatID, Date date) {
-        return resvDao.getResvsBySeatDate(seatID, date);
+        String userDateKey = resv.buildRedisKeyUserDate();
+        String seatDateKey = resv.buildRedisKeySeatDate();
+        Integer[] curBits = resv.buildRedisTimeBits();
+        redis.executeLuaScript("/lua/cancel_reservation.lua", userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
+
+        resvDao.updateResv(resv);
+
+        return resvDao.getResvByID(resvID);
     }
 
     public Reservation signinResv(Integer resvID, Integer userID) throws ReservationException {
@@ -152,19 +197,20 @@ public class ReservationServiceImpl implements ReservationService {
         return resvDao.getResvByID(resvID);
     }
 
-    public Reservation cancelResv(Integer resvID, Integer userID) throws ReservationException {
-        Reservation resv = resvDao.getResvByID(resvID);
-        if (resv == null) {
-            throw new ReservationException("not found reservation");
-        }
 
-        if (resv.getStatus() != 0) {
-            throw new ReservationException("reservation has been cancel");
-        }
+    public List<Reservation> getResvsByUser(Integer userID) {
+        return resvDao.getResvsByUser(userID, new RowBounds(0, 10));
+    }
 
-        resv.setStatus(1);
-        resvDao.updateResv(resv);
+    public List<Reservation> getResvsByUserDate(Integer userID, Date date) {
+        return resvDao.getResvsByUserDate(userID, date);
+    }
 
-        return resvDao.getResvByID(resvID);
+    public List<Reservation> getResvsBySeat(Integer seatID) {
+        return resvDao.getResvsBySeat(seatID, new RowBounds(0, 10));
+    }
+
+    public List<Reservation> getResvsBySeatDate(Integer seatID, Date date) {
+        return resvDao.getResvsBySeatDate(seatID, date);
     }
 }
