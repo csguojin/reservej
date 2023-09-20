@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.reserve.cache.Redis;
+import com.example.reserve.config.LuaScriptConfig;
 import com.example.reserve.dao.ReservationDao;
 import com.example.reserve.exception.ReservationException;
 import com.example.reserve.pojo.Reservation;
@@ -73,13 +74,13 @@ public class ReservationServiceImpl implements ReservationService {
             redis.unlock(lockUserKey, lockUserValue);
             throw new ReservationException("seat already has reservation in the time period");
         }
-        redis.executeLuaScript("/lua/create_reservation.lua", userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
+        redis.executeLuaScript(LuaScriptConfig.getCreateReservation(), userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
 
         resvDao.createResv(newResv);
 
         Reservation resv = resvDao.getResvByID(newResv.getId());
         if (resv == null) {
-            redis.executeLuaScript("/lua/cancel_reservation.lua", userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
+            redis.executeLuaScript(LuaScriptConfig.getCancelReservation(), userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
         }
 
         redis.unlock(lockSeatKey, lockSeatValue);
@@ -113,7 +114,7 @@ public class ReservationServiceImpl implements ReservationService {
         String userDateKey = resv.buildRedisKeyUserDate();
         String seatDateKey = resv.buildRedisKeySeatDate();
         Integer[] curBits = resv.buildRedisTimeBits();
-        redis.executeLuaScript("/lua/cancel_reservation.lua", userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
+        redis.executeLuaScript(LuaScriptConfig.getCancelReservation(), userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
 
         resvDao.updateResv(resv);
 

@@ -19,3 +19,9 @@ mybatis:
 jwt:
   secret: secret
   expiration: 86400000
+
+file:
+  lua:
+    reservation:
+      create: /lua/create_reservation.lua
+      cancel: /lua/cancel_reservation.lua
