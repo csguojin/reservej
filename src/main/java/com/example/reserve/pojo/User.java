@@ -12,4 +12,12 @@ public class User {
     private String username;
     private String password;
     private String email;
+
+    public String buildRedisKey() {
+        return "user:"+this.getId().toString();
+    }
+
+    public static String buildRedisKey(Integer userID) {
+        return "user:"+userID.toString();
+    }
 }

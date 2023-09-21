@@ -27,7 +27,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         String lockUserKey = newResv.buildRedisKeyLockUser();
         String lockUserValue = RandomStringGenerator.geneRandStr(16);
-        boolean ok = redis.lock(lockUserKey, lockUserValue, 60);
+        boolean ok = redis.lock(lockUserKey, lockUserValue, 5);
         if (!ok) {
             throw new ReservationException("user cannot make multiple appointments at the same time");
         }
@@ -51,7 +51,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         String lockSeatKey = newResv.buildRedisKeyLockSeat();
         String lockSeatValue = RandomStringGenerator.geneRandStr(16);
-        ok = redis.lock(lockSeatKey, lockSeatValue, 60);
+        ok = redis.lock(lockSeatKey, lockSeatValue, 5);
         if (!ok) {
             redis.unlock(lockUserKey, lockUserValue);
             throw new ReservationException("seat cannot handle multiple appointments at the same time");
@@ -73,13 +73,13 @@ public class ReservationServiceImpl implements ReservationService {
             redis.unlock(lockUserKey, lockUserValue);
             throw new ReservationException("seat already has reservation in the time period");
         }
-        redis.executeLuaScript(LuaScriptConfig.getCreateReservation(), userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
+        redis.execLuaScript(LuaScriptConfig.getCreateReservation(), userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
 
         resvDao.createResv(newResv);
 
         Reservation resv = resvDao.getResvByID(newResv.getId());
         if (resv == null) {
-            redis.executeLuaScript(LuaScriptConfig.getCancelReservation(), userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
+            redis.execLuaScript(LuaScriptConfig.getCancelReservation(), userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
         }
 
         redis.unlock(lockSeatKey, lockSeatValue);
@@ -103,7 +103,6 @@ public class ReservationServiceImpl implements ReservationService {
         if (resv == null) {
             throw new ReservationException("not found reservation");
         }
-
         if (resv.getStatus() != 0) {
             throw new ReservationException("reservation has been cancel");
         }
@@ -113,7 +112,7 @@ public class ReservationServiceImpl implements ReservationService {
         String userDateKey = resv.buildRedisKeyUserDate();
         String seatDateKey = resv.buildRedisKeySeatDate();
         Integer[] curBits = resv.buildRedisTimeBits();
-        redis.executeLuaScript(LuaScriptConfig.getCancelReservation(), userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
+        redis.execLuaScript(LuaScriptConfig.getCancelReservation(), userDateKey, seatDateKey, curBits[0].toString(), curBits[curBits.length - 1].toString());
 
         resvDao.updateResv(resv);
 
@@ -125,17 +124,14 @@ public class ReservationServiceImpl implements ReservationService {
         if (resv == null) {
             throw new ReservationException("not found reservation");
         }
-
         if (resv.getStatus() != 0) {
             throw new ReservationException("reservation has been cancel");
         }
-
         if (resv.getSigninTime() != null) {
             throw new ReservationException("repeat signin");
         }
 
         Date now = new Date();
-
         Calendar nowPlus15Minutes = Calendar.getInstance();
         nowPlus15Minutes.setTime(now);
         nowPlus15Minutes.add(Calendar.MINUTE, 15);

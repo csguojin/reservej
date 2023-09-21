@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.lettuce.core.BitFieldArgs;
-import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.api.sync.RedisCommands;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -27,7 +26,6 @@ public class Redis {
     private RedisCommands<String, String> syncCommands;
     @Autowired
     private RedisTemplate<String, String> strRedisTemplate;
-
     @Autowired
     private RedisTemplate<String, Object> objRedisTemplate;
 
@@ -39,15 +37,6 @@ public class Redis {
         Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
         objRedisTemplate.setValueSerializer(serializer);
         objRedisTemplate.opsForValue().set(key, value);
-    }
-
-    public void testtest(String classpath) {
-        DefaultRedisScript<String> redisScript = new DefaultRedisScript<>();
-        redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource(classpath)));
-        redisScript.setResultType(String.class);
-        System.out.println("####################");
-        System.out.println(redisScript.getScriptAsString());
-        System.out.println("####################");
     }
 
     public String get(String key) {
@@ -88,7 +77,6 @@ public class Redis {
     public boolean exists(String key) {
         return syncCommands.exists(key) == 1;
     }
-
 
     public boolean lock(String key, String value, long timeoutSeconds) {
         Boolean lockAcquired = strRedisTemplate.opsForValue().setIfAbsent(key, value, timeoutSeconds, TimeUnit.SECONDS);
@@ -136,13 +124,7 @@ public class Redis {
         return ans;
     }
 
-
-
-
-
-
-
-    public String executeLuaScript(String classpath, String key1, String key2, String arg1, String arg2) {
+    public String execLuaScript(String classpath, String key1, String key2, String arg1, String arg2) {
         DefaultRedisScript<String> redisScript = new DefaultRedisScript<>();
         redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource(classpath)));
         redisScript.setResultType(String.class);
@@ -151,54 +133,5 @@ public class Redis {
 
         List<String> keys = Arrays.asList(key1, key2);
         return strRedisTemplate.execute(redisScript, keys, arg1, arg2);
-    }
-
-    public String executeLuaScript2(String classpath, String... keysAndArgs) {
-        DefaultRedisScript<String> redisScript = new DefaultRedisScript<>();
-        redisScript.setScriptSource(new ResourceScriptSource(new ClassPathResource(classpath)));
-        redisScript.setResultType(String.class);
-
-        return syncCommands.eval(redisScript.getScriptAsString(), ScriptOutputType.VALUE, keysAndArgs);
-    }
-
-    private void test() {
-        String seatKey = "seatKey";
-        String userKey = "userKey";
-        long startOffset = 0;
-        long endOffset = 10;
-
-
-        String luaScript = "local seatKey = KEYS[1]\n" +
-                "local userKey = KEYS[2]\n" +
-                "local startOffset = tonumber(ARGV[1])\n" +
-                "local endOffset = tonumber(ARGV[2])\n" +
-                "\n" +
-                "local seatBitCount = redis.call('BITCOUNT', seatKey, startOffset, endOffset, 'BIT')\n" +
-                "local userBitCount = redis.call('BITCOUNT', userKey, startOffset, endOffset, 'BIT')\n" +
-                "\n" +
-                "if seatBitCount == 0 and userBitCount == 0 then\n" +
-                "    local bitfieldArgs = {}\n" +
-                "\n" +
-                "    for i = startOffset, endOffset do\n" +
-                "        table.insert(bitfieldArgs, \"SET\")\n" +
-                "        table.insert(bitfieldArgs, \"u1\")\n" +
-                "        table.insert(bitfieldArgs, i)\n" +
-                "        table.insert(bitfieldArgs, 1)\n" +
-                "    end\n" +
-                "\n" +
-                "    redis.call('BITFIELD', seatKey, unpack(bitfieldArgs))\n" +
-                "    redis.call('BITFIELD', userKey, unpack(bitfieldArgs))\n" +
-                "\n" +
-                "    return 'OK'\n" +
-                "else\n" +
-                "    return 'BITCOUNT not equal to 0'\n" +
-                "end";
-
-        String result = syncCommands.eval(luaScript, // Lua 脚本
-                ScriptOutputType.VALUE, // 返回值类型
-                "2", // KEY数量
-                "seatKey", "userKey", // KEY列表
-                "0", "10" // ARGV列表
-        );
     }
 }

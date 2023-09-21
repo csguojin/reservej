@@ -24,6 +24,29 @@ public class Reservation {
     private Date signoutTime;
     private Integer status;
 
+    public boolean check() throws ReservationException {
+        if (this.getUserID() <= 0) {
+            throw new ReservationException("invalid user");
+        }
+        if (this.getSeatID() <= 0) {
+            throw new ReservationException("invalid seat");
+        }
+        if (!this.getEndTime().after(this.getStartTime())) {
+            throw new ReservationException("start time must be before end time");
+        }
+
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTime(this.getStartTime());
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTime(this.getEndTime());
+        if (cal1.get(Calendar.YEAR) != cal2.get(Calendar.YEAR)
+                || cal1.get(Calendar.DAY_OF_YEAR) != cal2.get(Calendar.DAY_OF_YEAR)) {
+            throw new ReservationException("start time and end time must be on the same day");
+        }
+
+        return true;
+    }
+
     public String buildRedisKeyLockUser() throws ReservationException {
         if (this.getUserID() <= 0) {
             throw new ReservationException("invalid user");
@@ -42,6 +65,13 @@ public class Reservation {
         return "resvbit:user:" + this.getUserID().toString() + ":" + sdf.format(this.getStartTime());
     }
 
+    public String buildRedisKeyLockSeat() throws ReservationException {
+        if (this.getSeatID() <= 0) {
+            throw new ReservationException("invalid seat");
+        }
+        return "lock:resv:seat:" + this.getSeatID();
+    }
+
     public String buildRedisKeySeatDate() throws ReservationException {
         if (this.getSeatID() <= 0) {
             throw new ReservationException("invalid seat");
@@ -51,13 +81,6 @@ public class Reservation {
         }
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
         return "resvbit:seat:"+ this.getSeatID().toString() + ":" + sdf.format(this.getStartTime());
-    }
-
-    public String buildRedisKeyLockSeat() throws ReservationException {
-        if (this.getSeatID() <= 0) {
-            throw new ReservationException("invalid seat");
-        }
-        return "lock:resv:seat:" + this.getSeatID();
     }
 
     public String buildRedisKey() {
@@ -90,30 +113,6 @@ public class Reservation {
         int endBit = endMinutes / 5;
 
         return new Integer[]{startBit, endBit};
-    }
-
-
-    public boolean check() throws ReservationException {
-        if (this.getUserID() <= 0) {
-            throw new ReservationException("invalid user");
-        }
-        if (this.getSeatID() <= 0) {
-            throw new ReservationException("invalid seat");
-        }
-        if (!this.getEndTime().after(this.getStartTime())) {
-            throw new ReservationException("start time must be before end time");
-        }
-
-        Calendar cal1 = Calendar.getInstance();
-        cal1.setTime(this.getStartTime());
-        Calendar cal2 = Calendar.getInstance();
-        cal2.setTime(this.getEndTime());
-        if (cal1.get(Calendar.YEAR) != cal2.get(Calendar.YEAR)
-                || cal1.get(Calendar.DAY_OF_YEAR) != cal2.get(Calendar.DAY_OF_YEAR)) {
-            throw new ReservationException("start time and end time must be on the same day");
-        }
-
-        return true;
     }
 }
 

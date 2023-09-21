@@ -15,6 +15,14 @@ import org.springframework.stereotype.Component;
 
 @Configuration
 public class RedisConfig {
+    @Data
+    @Component
+    @ConfigurationProperties(prefix = "spring.data.redis")
+    class RedisProperties {
+        String host;
+        String port;
+    }
+
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
@@ -22,14 +30,6 @@ public class RedisConfig {
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
         return template;
-    }
-
-    @Data
-    @Component
-    @ConfigurationProperties(prefix = "spring.data.redis")
-    class RedisProperties {
-        String host;
-        String port;
     }
 
     @Bean
