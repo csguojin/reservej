@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.lettuce.core.BitFieldArgs;
 import io.lettuce.core.api.sync.RedisCommands;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -23,11 +24,12 @@ import static io.lettuce.core.BitFieldArgs.unsigned;
 @Service
 public class Redis {
     @Autowired
-    private RedisCommands<String, String> syncCommands;
-    @Autowired
     private RedisTemplate<String, String> strRedisTemplate;
     @Autowired
     private RedisTemplate<String, Object> objRedisTemplate;
+    @Autowired
+    @Lazy
+    private RedisCommands<String, String> syncCommands;
 
     public void set(String key, String value) {
         syncCommands.set(key, value);
