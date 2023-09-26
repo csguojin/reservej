@@ -1,7 +1,7 @@
 # Reserve
 
 This is a simple reservation system.
-The system supports user management, resource management, and reservation management, among other features.
+The system supports multiple functions such as user management, resource management, and reservation management.
 
 ## Getting Started
 
